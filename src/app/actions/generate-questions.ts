@@ -67,6 +67,7 @@ export async function formQuestions(): Promise<SkillArea[]> {
             config: {
                 responseMimeType: "application/json",
                 responseSchema: responseSchema,
+                temperature:1,
             },
         });
         const responseText = result.text ?? "";

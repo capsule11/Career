@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SkillResult, PersonalProfile, CareerRecommendation } from '@/types';
-import { ArrowLeft, CheckCircle, TrendingUp, GraduationCap, DollarSign, Users, Lightbulb, Target } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, TrendingUp, GraduationCap, DollarSign, Users, Lightbulb, Target } from 'lucide-react';
 import { useTestResultStore } from '@/store/test-result';
 import { usePersonalProfileStore } from '@/store/personal-profile';
 import { generateRecommendations } from '../app/actions/generate-recommendations';
+import { LoadingScreen } from './LoadingScreen';
 
 export const CareerRecommendations: React.FC = () => {
   const router = useRouter();
@@ -14,13 +15,20 @@ export const CareerRecommendations: React.FC = () => {
   const personalProfile = usePersonalProfileStore((state) => state.personalProfile);
   const [recommendations, setRecommendations] = useState<CareerRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRecommendations = async () => {
       if (skillResults.length > 0 && personalProfile) {
-        const recs = await generateRecommendations(skillResults, personalProfile);
-        setRecommendations(recs);
-        setLoading(false);
+        try {
+          const recs = await generateRecommendations(skillResults, personalProfile);
+          setRecommendations(recs);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error generating recommendations:', error);
+          setError('Failed to generate recommendations. Please try again.');
+          setLoading(false);
+        }
       }
     };
     fetchRecommendations();
@@ -30,8 +38,46 @@ export const CareerRecommendations: React.FC = () => {
     router.push('/');
   };
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-red-100 text-red-800 px-4 py-2 rounded-full mb-6">
+              <XCircle size={20} />
+              Error Occurred
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Oops! Something went wrong
+            </h1>
+            <p className="text-gray-600 text-xl mb-8">
+              {error}
+            </p>
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                }}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors mr-4"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={handleRestart}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors"
+              >
+                Start Over
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
-    return <div>Loading recommendations...</div>;
+    return <LoadingScreen />;
   }
 
   const topSkills = skillResults.sort((a, b) => b.percentage - a.percentage).slice(0, 3);
