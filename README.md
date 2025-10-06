@@ -29,6 +29,12 @@ A comprehensive career guidance platform built with Next.js 15 and powered by Go
 - **Interactive Interface**: Modern UI with step-by-step guidance
 - **Dynamic Content**: AI-generated options based on assessment results
 
+### 🔐 User Authentication & Data Persistence
+- **Secure Authentication**: JWT-based authentication with bcrypt password hashing
+- **MongoDB Integration**: Complete user data persistence with progress tracking
+- **Session Management**: Secure cookie-based session handling
+- **Progress Tracking**: Visual progress indicators showing assessment completion
+
 ### 🎨 Enhanced User Experience
 - **Professional Loading Screens**: Engaging animations with educational content during AI processing
 - **Progress Tracking**: Visual progress indicators throughout the assessment journey
@@ -42,6 +48,7 @@ A comprehensive career guidance platform built with Next.js 15 and powered by Go
 Before running this project, make sure you have:
 - **Node.js** 18.x or later
 - **npm**, **yarn**, **pnpm**, or **bun** package manager
+- **MongoDB Database** (Atlas or local instance)
 - **Google Gemini API Key** for AI-powered features
 
 ### Installation
@@ -66,8 +73,18 @@ Before running this project, make sure you have:
 3. **Set up environment variables**
    Create a `.env.local` file in the root directory:
    ```env
+   # MongoDB Database
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/career-guidance?retryWrites=true&w=majority
+   
+   # Google Gemini AI
    GEMINI_API_KEY=your_google_gemini_api_key_here
+   
+   # Authentication
+   JWT_SECRET=your_jwt_secret_key_here
+   NEXTAUTH_SECRET=your_nextauth_secret_here
    ```
+   
+   **Note:** Copy `.env.example` to `.env.local` and fill in your actual values.
 
 4. **Run the development server**
    ```bash
@@ -107,8 +124,17 @@ career/
 │   │   ├── LoadingScreen.tsx
 │   │   ├── SkillsTestLoadingScreen.tsx
 │   │   ├── PersonalProfileLoadingScreen.tsx
+│   │   ├── AuthModal.tsx
 │   │   ├── Navbar.tsx
 │   │   └── Footer.tsx
+│   ├── contexts/             # React contexts
+│   │   └── AuthContext.tsx   # Authentication context
+│   ├── lib/                  # Utility functions and configurations
+│   │   ├── mongodb.ts        # MongoDB connection
+│   │   └── auth.ts           # Authentication utilities
+│   ├── models/               # MongoDB/Mongoose models
+│   │   ├── User.ts           # User model
+│   │   └── Assessment.ts     # Assessment session model
 │   ├── data/                  # Static data and utilities
 │   │   ├── skillsData.ts      # Pre-defined skill areas and questions
 │   │   └── actions.ts
@@ -150,6 +176,12 @@ career/
 - **Google Gemini AI** - Advanced language model for career analysis
 - **Structured JSON Responses** - Schema-validated AI outputs
 - **Server Actions** - Next.js server-side processing
+
+### Database & Authentication
+- **MongoDB** - NoSQL database for flexible data storage
+- **Mongoose** - Object modeling for Node.js and MongoDB
+- **JWT** - Secure token-based authentication
+- **bcryptjs** - Password hashing and security
 
 ### State Management
 - **Zustand** - Lightweight state management

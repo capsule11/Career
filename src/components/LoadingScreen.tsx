@@ -121,7 +121,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         {/* Progress Steps */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-            What's Happening Behind the Scenes
+            What&apos;s Happening Behind the Scenes
           </h3>
           <div className="space-y-6">
             {steps.map((step) => {

@@ -28,7 +28,7 @@ const loadingSteps = [
 const testTips = [
   "Read each question carefully before selecting an answer",
   "You have 30 seconds per question - trust your instincts",
-  "Don't worry if you don't know an answer - it's part of the learning process",
+  "Don&apos;t worry if you don&apos;t know an answer - it&apos;s part of the learning process",
   "The test adapts to your skill level as you progress",
   "Take your time to understand the explanations after each question"
 ];
@@ -116,7 +116,7 @@ export const SkillsTestLoadingScreen: React.FC<SkillsTestLoadingScreenProps> = (
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <Target className="text-indigo-600" size={24} />
-              Skills You'll Be Tested On
+              Skills You&apos;ll Be Tested On
             </h3>
             <div className="space-y-4">
               {skillAreas.map((skill, index) => {
