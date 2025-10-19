@@ -72,6 +72,8 @@ export default function UserProfilePage() {
         userProfile={userProfileData}
         skillResults={user.skillResults}
         personalProfile={user.personalProfile}
+        assessmentHistory={user.assessmentHistory || []}
+        onRetakeAssessment={() => router.push('/skills-test')}
       />
       <Footer />
     </div>

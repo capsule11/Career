@@ -16,7 +16,7 @@ export const Navbar: React.FC = () => {
   const navItems = [
     { id: 'welcome', label: 'Home', icon: Home, path: '/' },
     { id: 'skills-test', label: 'Assessment', icon: Brain, path: '/skills-test' },
-    { id: 'guidance', label: 'Guidance', icon: Compass, path: '/guidance' },
+    { id: 'guidance', label: 'Guidance', icon: Compass, path: '/guidance-section' },
   ];
 
   return (
@@ -43,7 +43,14 @@ export const Navbar: React.FC = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => router.push(item.path)}
+                  onClick={() => {
+                    // Check if user needs to be authenticated for this route
+                    if ((item.id === 'skills-test' || item.id === 'guidance') && !user) {
+                      setShowAuthModal(true);
+                      return;
+                    }
+                    router.push(item.path);
+                  }}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
                     isActive
                       ? 'bg-blue-100 text-blue-700 font-medium'
@@ -131,6 +138,12 @@ export const Navbar: React.FC = () => {
                   <button
                     key={item.id}
                     onClick={() => {
+                      // Check if user needs to be authenticated for this route
+                      if ((item.id === 'skills-test' || item.id === 'guidance') && !user) {
+                        setShowAuthModal(true);
+                        setIsMobileMenuOpen(false);
+                        return;
+                      }
                       router.push(item.path);
                       setIsMobileMenuOpen(false);
                     }}

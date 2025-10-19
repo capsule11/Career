@@ -1,33 +1,52 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { SkillsTest } from '@/components/SkillsTest';
 import { SkillsTestLoadingScreen } from '@/components/SkillsTestLoadingScreen';
+import { useAuth } from '@/contexts/AuthContext';
 import { SkillArea } from '../types';
 import { formQuestions } from '../actions/generate-questions';
 
 export default function SkillsTestPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [skillAreas, setSkillAreas] = useState<SkillArea[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchSkillAreas = async () => {
-      try {
-        const areas = await formQuestions();
-        setSkillAreas(areas);
-        setLoading(false);
-      } catch (err) {
-        console.error('Failed to load skills test:', err);
-        setError('Failed to load the assessment. Please refresh the page to try again.');
-        setLoading(false);
-      }
-    };
-    fetchSkillAreas();
-  }, []);
+    // Check if user is authenticated
+    if (!authLoading && !user) {
+      router.push('/');
+      return;
+    }
 
-  if (loading) {
+    // If user is authenticated, load skill areas
+    if (user) {
+      const fetchSkillAreas = async () => {
+        try {
+          const areas = await formQuestions();
+          setSkillAreas(areas);
+          setLoading(false);
+        } catch (err) {
+          console.error('Failed to load skills test:', err);
+          setError('Failed to load the assessment. Please refresh the page to try again.');
+          setLoading(false);
+        }
+      };
+      fetchSkillAreas();
+    }
+  }, [user, authLoading, router]);
+
+  // Show loading screen while checking auth or loading skill areas
+  if (authLoading || loading) {
     return <SkillsTestLoadingScreen />;
+  }
+
+  // Redirect to home if not authenticated
+  if (!user) {
+    return null;
   }
 
   if (error) {
