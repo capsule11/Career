@@ -14,8 +14,7 @@ interface SkillsTestProps {
 export const SkillsTest: React.FC<SkillsTestProps> = ({ skillAreas }) => {
   const router = useRouter();
   const setSkillResults = useTestResultStore((state) => state.setSkillResults);
-  const authContext = useAuth();
-  const { user, updateUser } = authContext;
+  const { saveAssessmentResults, user, updateUser } = useAuth();
   const [currentAreaIndex, setCurrentAreaIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -51,9 +50,9 @@ export const SkillsTest: React.FC<SkillsTestProps> = ({ skillAreas }) => {
     if (selectedAnswer !== null || timeLeft === 0) {
       const finalAnswer = selectedAnswer !== null ? selectedAnswer : -1;
       const timeSpent = 30 - timeLeft;
-      
+
       setAnswers(prev => ({ ...prev, [currentQuestion.id]: finalAnswer }));
-      
+
       // Track detailed answer for database storage
       const answerDetail = {
         questionId: currentQuestion.id,
@@ -62,7 +61,7 @@ export const SkillsTest: React.FC<SkillsTestProps> = ({ skillAreas }) => {
         timeSpent: timeSpent,
         skillArea: currentArea.name
       };
-      
+
       setAnswersWithDetails(prev => [...prev, answerDetail]);
       setShowExplanation(true);
       setTimerActive(false);
@@ -79,20 +78,17 @@ export const SkillsTest: React.FC<SkillsTestProps> = ({ skillAreas }) => {
       // Test complete
       const results = calculateResults();
       setSkillResults(results);
-      
+
       // Save assessment results to database
       if (user) {
         setSaving(true);
         try {
           const sessionId = `session_${Date.now()}_${user.id}`;
-          const saveAssessmentResults = (authContext as any).saveAssessmentResults;
-          if (saveAssessmentResults) {
-            const result = await saveAssessmentResults(results, answersWithDetails, sessionId);
-            if (result.success) {
-              console.log('Assessment results saved successfully');
-            } else {
-              console.error('Failed to save assessment results:', result.error);
-            }
+          const result = await saveAssessmentResults(results, answersWithDetails, sessionId);
+          if (result.success) {
+            console.log('Assessment results saved successfully');
+          } else {
+            console.error('Failed to save assessment results:', result);
           }
         } catch (error) {
           console.error('Error saving assessment results:', error);
@@ -100,7 +96,7 @@ export const SkillsTest: React.FC<SkillsTestProps> = ({ skillAreas }) => {
           setSaving(false);
         }
       }
-      
+
       router.push('/skill-results');
       return;
     }

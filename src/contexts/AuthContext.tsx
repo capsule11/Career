@@ -25,6 +25,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
   refreshUser: () => Promise<void>;
+  saveAssessmentResults: (skillResults: any[], answers?: any[], sessionId?: string) => Promise<{
+    success: boolean;
+  }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -167,11 +170,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true };
       } else {
         const data = await response.json();
-        return { success: false, error: data.error };
+        return { success: false };
       }
     } catch (error) {
       console.error('Save assessment error:', error);
-      return { success: false, error: 'Failed to save assessment results' };
+      throw error
     }
   };
 
@@ -241,6 +244,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     updateUser,
     refreshUser,
+    saveAssessmentResults
   };
 
   // Add the save functions to the context
