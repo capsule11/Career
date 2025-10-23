@@ -68,18 +68,6 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center gap-4">
             {user ? (
               <div className="flex items-center gap-3">
-                {/* Progress Indicator */}
-                {user.progressPercentage !== undefined && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${user.progressPercentage}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-600">{user.progressPercentage}%</span>
-                  </div>
-                )}
                 
                 <button
                   onClick={() => router.push('/user-profile')}

@@ -46,16 +46,6 @@ export default function Home() {
     setShowGuidance(false);
   };
 
-  // Show guidance if user has completed assessment but needs guidance
-  if (showGuidance || (user && assessmentCompleted && needsGuidance)) {
-    return (
-      <GuidanceSection 
-        onBack={handleBackFromGuidance}
-        skillResults={user?.skillResults}
-        personalProfile={user?.personalProfile}
-      />
-    );
-  }
 
   const getActionButtonText = () => {
     if (!user) return 'Start Your Career Assessment';
@@ -97,50 +87,6 @@ export default function Home() {
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
-          {/* Progress Banner for logged-in users */}
-          {user && (assessmentCompleted || profileCompleted || recommendationsGenerated) && (
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Your Progress</h3>
-                {assessmentCompleted && needsGuidance && (
-                  <button
-                    onClick={handleViewGuidance}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors"
-                  >
-                    <BookOpen size={16} />
-                    View Guidance
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-                    style={{ 
-                      width: `${(Number(assessmentCompleted) + Number(profileCompleted) + Number(recommendationsGenerated)) / 3 * 100}%` 
-                    }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-600">
-                  {Math.round((Number(assessmentCompleted) + Number(profileCompleted) + Number(recommendationsGenerated)) / 3 * 100)}%
-                </span>
-              </div>
-              <div className="flex items-center gap-6 mt-4 text-sm">
-                <div className={`flex items-center gap-2 ${assessmentCompleted ? 'text-green-600' : 'text-gray-500'}`}>
-                  <div className={`w-2 h-2 rounded-full ${assessmentCompleted ? 'bg-green-500' : 'bg-gray-300'}`} />
-                  Skills Assessment
-                </div>
-                <div className={`flex items-center gap-2 ${profileCompleted ? 'text-green-600' : 'text-gray-500'}`}>
-                  <div className={`w-2 h-2 rounded-full ${profileCompleted ? 'bg-green-500' : 'bg-gray-300'}`} />
-                  Personal Profile
-                </div>
-                <div className={`flex items-center gap-2 ${recommendationsGenerated ? 'text-green-600' : 'text-gray-500'}`}>
-                  <div className={`w-2 h-2 rounded-full ${recommendationsGenerated ? 'bg-green-500' : 'bg-gray-300'}`} />
-                  Career Recommendations
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Hero Section */}
           <div className="text-center mb-16">
