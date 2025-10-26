@@ -1,52 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromRequest, updateUserProgress } from '@/lib/auth';
-import { CareerRecommendation } from '@/types';
-
-export async function POST(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const body = await request.json();
-    const { recommendations } = body;
-
-    if (!recommendations || !Array.isArray(recommendations)) {
-      return NextResponse.json(
-        { error: 'Invalid recommendations data' },
-        { status: 400 }
-      );
-    }
-
-    // Update user progress
-    const updatedUser = await updateUserProgress(user._id, 'recommendations', { recommendations });
-
-    if (!updatedUser) {
-      return NextResponse.json(
-        { error: 'Failed to save recommendations' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      message: 'Career recommendations saved successfully',
-      careerRecommendations: updatedUser.careerRecommendations,
-      progressPercentage: updatedUser.progressPercentage
-    });
-
-  } catch (error: any) {
-    console.error('Recommendations save error:', error);
-    return NextResponse.json(
-      { error: 'Failed to save career recommendations' },
-      { status: 500 }
-    );
-  }
-}
+import { getUserFromRequest } from '@/lib/auth';
+import { connectToMongoDB } from '@/lib/mongodb';
+import Recommendation from '@/models/Recommendation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,17 +14,53 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    await connectToMongoDB();
+
+    const recommendations = await Recommendation.findOne({ userId: user._id }).sort({ createdAt: -1 });
+
     return NextResponse.json({
-      careerRecommendations: user.careerRecommendations || [],
-      recommendationsGenerated: user.recommendationsGenerated,
-      skillResults: user.skillResults || [],
-      personalProfile: user.personalProfile || {}
+      recommendations: recommendations ? recommendations.recommendations : [],
     });
 
   } catch (error: any) {
-    console.error('Recommendations fetch error:', error);
+    console.error('Recommendation fetch error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch career recommendations' },
+      { error: 'Failed to fetch recommendations' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getUserFromRequest(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { recommendations } = await request.json();
+
+    await connectToMongoDB();
+
+    const newRecommendation = new Recommendation({
+      userId: user._id,
+      recommendations,
+    });
+
+    await newRecommendation.save();
+
+    return NextResponse.json({
+      message: 'Recommendations saved successfully',
+    });
+
+  } catch (error: any) {
+    console.error('Recommendation save error:', error);
+    return NextResponse.json(
+      { error: 'Failed to save recommendations' },
       { status: 500 }
     );
   }

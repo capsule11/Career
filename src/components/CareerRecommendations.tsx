@@ -18,20 +18,34 @@ export const CareerRecommendations: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRecommendations = async () => {
+    const fetchAndSaveRecommendations = async () => {
       if (skillResults.length > 0 && personalProfile) {
         try {
           const recs = await generateRecommendations(skillResults, personalProfile);
           setRecommendations(recs);
           setLoading(false);
+
+          // Automatically save recommendations
+          const response = await fetch('/api/user/recommendations', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ recommendations: recs }),
+          });
+
+          if (!response.ok) {
+            console.error('Failed to save recommendations automatically');
+          }
         } catch (error) {
-          console.error('Error generating recommendations:', error);
-          setError('Failed to generate recommendations. Please try again.');
+          console.error('Error generating or saving recommendations:', error);
+          setError('Failed to generate or save recommendations. Please try again.');
           setLoading(false);
         }
       }
     };
-    fetchRecommendations();
+    fetchAndSaveRecommendations();
   }, [skillResults, personalProfile]);
 
   const handleRestart = () => {

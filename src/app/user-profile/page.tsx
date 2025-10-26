@@ -3,19 +3,40 @@
 import { UserProfile } from "@/components/UserProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 export default function UserProfilePage() {
   const { user, loading, updateUser } = useAuth();
   const router = useRouter();
+  const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        const response = await fetch('/api/user/recommendations', {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setRecommendations(data.recommendations);
+        }
+      } catch (error) {
+        console.error('Error fetching recommendations:', error);
+      }
+    };
+
+    if (user) {
+      fetchRecommendations();
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -71,7 +92,7 @@ export default function UserProfilePage() {
         onUpdateProfile={handleUpdateProfile} 
         userProfile={userProfileData}
         skillResults={user.skillResults}
-        personalProfile={user.personalProfile}
+        recommendations={recommendations}
         assessmentHistory={user.assessmentHistory || []}
         onRetakeAssessment={() => router.push('/skills-test')}
       />

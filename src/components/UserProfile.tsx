@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Award, TrendingUp, Target, Clock, CheckCircle, History, BookOpen } from 'lucide-react';
-import { SkillResult, PersonalProfile } from '@/types';
-import { useGuidanceStore } from '@/store/guidance';
+import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Award, TrendingUp, Target, Clock, CheckCircle, History, BookOpen, Briefcase } from 'lucide-react';
+import { SkillResult } from '@/types';
 
 interface UserProfileProps {
   userProfile: {
@@ -15,12 +14,11 @@ interface UserProfileProps {
     avatar?: string;
   };
   skillResults?: SkillResult[];
-  personalProfile?: PersonalProfile;
+  recommendations?: any[];
   assessmentHistory?: {
     sessionId: string;
     completedAt: Date;
     skillResults: SkillResult[];
-    personalProfile?: PersonalProfile;
     recommendations?: any[];
   }[];
   onBack: () => void;
@@ -31,7 +29,7 @@ interface UserProfileProps {
 export const UserProfile: React.FC<UserProfileProps> = ({
   userProfile,
   skillResults,
-  personalProfile,
+  recommendations = [],
   assessmentHistory = [],
   onBack,
   onUpdateProfile,
@@ -39,14 +37,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState(userProfile);
-  const [activeTab, setActiveTab] = useState<'overview' | 'assessment' | 'history' | 'guidance'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'assessment' | 'history' | 'recommendations'>('overview');
   
-  const { fetchGuidanceStatus, guidanceViewed, assessmentCompleted, profileCompleted, recommendationsGenerated } = useGuidanceStore();
-
-  useEffect(() => {
-    fetchGuidanceStatus();
-  }, [fetchGuidanceStatus]);
-
   const handleSave = () => {
     onUpdateProfile(editedProfile);
     setIsEditing(false);
@@ -179,7 +171,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               { key: 'overview', label: 'Overview', icon: User },
               { key: 'assessment', label: 'Assessment', icon: Award },
               { key: 'history', label: 'History', icon: History },
-              { key: 'guidance', label: 'Guidance', icon: BookOpen }
+              { key: 'recommendations', label: 'Recommendations', icon: Briefcase }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -207,37 +199,31 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Progress</h2>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className={`p-6 rounded-lg text-center ${
-                  assessmentCompleted ? 'bg-green-100' : 'bg-gray-100'
+                <div className={`p-6 rounded-lg text-center bg-green-100'
                 }`}>
-                  <CheckCircle className={`mx-auto mb-2 ${
-                    assessmentCompleted ? 'text-green-600' : 'text-gray-400'
+                  <CheckCircle className={`mx-auto mb-2 text-green-600'
                   }`} size={32} />
                   <h3 className="font-semibold">Skills Assessment</h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    {assessmentCompleted ? 'Completed' : 'Not Started'}
+                    Completed
                   </p>
                 </div>
-                <div className={`p-6 rounded-lg text-center ${
-                  profileCompleted ? 'bg-green-100' : 'bg-gray-100'
+                <div className={`p-6 rounded-lg text-center bg-green-100'
                 }`}>
-                  <CheckCircle className={`mx-auto mb-2 ${
-                    profileCompleted ? 'text-green-600' : 'text-gray-400'
+                  <CheckCircle className={`mx-auto mb-2 text-green-600'
                   }`} size={32} />
                   <h3 className="font-semibold">Personal Profile</h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    {profileCompleted ? 'Completed' : 'Not Started'}
+                    Completed
                   </p>
                 </div>
-                <div className={`p-6 rounded-lg text-center ${
-                  recommendationsGenerated ? 'bg-green-100' : 'bg-gray-100'
+                <div className={`p-6 rounded-lg text-center bg-green-100'
                 }`}>
-                  <CheckCircle className={`mx-auto mb-2 ${
-                    recommendationsGenerated ? 'text-green-600' : 'text-gray-400'
+                  <CheckCircle className={`mx-auto mb-2 text-green-600'
                   }`} size={32} />
                   <h3 className="font-semibold">Career Recommendations</h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    {recommendationsGenerated ? 'Generated' : 'Pending'}
+                    Generated
                   </p>
                 </div>
               </div>
@@ -251,7 +237,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Assessment Management</h2>
-                {assessmentCompleted && onRetakeAssessment && (
+                {onRetakeAssessment && (
                   <button
                     onClick={onRetakeAssessment}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -261,15 +247,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 )}
               </div>
               
-              {assessmentCompleted ? (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-green-800">✓ You have completed your skills assessment. Your results are available below.</p>
-                </div>
-              ) : (
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <p className="text-yellow-800">⚠ You haven&apos;t completed your skills assessment yet. Take the assessment to unlock personalized career recommendations.</p>
-                </div>
-              )}
+              <div className="bg-green-50 p-4 rounded-lg">
+                <p className="text-green-800">✓ You have completed your skills assessment. Your results are available below.</p>
+              </div>
             </div>
 
         {/* Assessment Results */}
@@ -370,111 +350,30 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           </div>
         )}
 
-        {activeTab === 'guidance' && (
+        {activeTab === 'recommendations' && (
           <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Guidance Progress</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {[
-                { key: 'careerExploration', title: 'Career Exploration', description: 'Explore different career paths and opportunities' },
-                { key: 'skillDevelopment', title: 'Skill Development', description: 'Learn about essential skills for your career' },
-                { key: 'educationPlanning', title: 'Education Planning', description: 'Plan your educational journey and courses' },
-                { key: 'industryInsights', title: 'Industry Insights', description: 'Stay updated with industry trends and market' }
-              ].map((section) => {
-                const isViewed = guidanceViewed[section.key as keyof typeof guidanceViewed];
-                return (
-                  <div key={section.key} className={`p-6 rounded-lg border-2 ${
-                    isViewed ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
-                  }`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      {isViewed ? (
-                        <CheckCircle className="text-green-600" size={24} />
-                      ) : (
-                        <Clock className="text-gray-400" size={24} />
-                      )}
-                      <h3 className="font-semibold text-lg text-gray-900">{section.title}</h3>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Career Recommendations</h2>
+            {recommendations && recommendations.length > 0 ? (
+              <div className="space-y-6">
+                {recommendations.map((rec: any, index: number) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-6">
+                    <h3 className="font-semibold text-lg text-gray-900">{rec.title}</h3>
+                    <p className="text-sm text-gray-600 mb-4">{rec.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {rec.skills.map((skill: string, i: number) => (
+                        <span key={i} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                          {skill}
+                        </span>
+                      ))}
                     </div>
-                    <p className="text-gray-600 text-sm mb-3">{section.description}</p>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                      isViewed 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-200 text-gray-600'
-                    }`}>
-                      {isViewed ? 'Viewed' : 'Not Viewed'}
-                    </span>
                   </div>
-                );
-              })}
-            </div>
-
-            {guidanceViewed.lastViewedAt && (
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <p className="text-blue-800 text-sm">
-                  Last guidance session: {new Date(guidanceViewed.lastViewedAt).toLocaleDateString()}
-                </p>
+                ))}
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Personal Profile - shown in assessment tab */}
-        {activeTab === 'assessment' && personalProfile && (
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Personal Profile</h2>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Interests</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {personalProfile.interests.map((interest, index) => (
-                      <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                        {interest}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Personality Traits</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {personalProfile.personalityTraits.map((trait, index) => (
-                      <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                        {trait}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Work Environment</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {personalProfile.workEnvironment.map((env, index) => (
-                      <span key={index} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                        {env}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Values</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {personalProfile.values.map((value, index) => (
-                      <span key={index} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
-                        {value}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {personalProfile.careerGoals && (
-              <div className="mt-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Career Goals</h3>
-                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{personalProfile.careerGoals}</p>
+            ) : (
+              <div className="text-center py-12">
+                <Briefcase className="mx-auto text-gray-400 mb-4" size={48} />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Recommendations Yet</h3>
+                <p className="text-gray-600">Complete your skills assessment to receive personalized career recommendations.</p>
               </div>
             )}
           </div>
