@@ -6,6 +6,7 @@ import { ChevronRight, ArrowLeft, User, Heart, MapPin, Target, Star } from 'luci
 import { PersonalProfile as PersonalProfileType } from '@/types';
 import { usePersonalProfileStore } from '@/store/personal-profile';
 import { generateProfileOptions, ProfileOptions } from '../app/actions/generate-profile-options';
+import { PersonalProfileLoadingScreen } from './PersonalProfileLoadingScreen';
 
 export const PersonalProfile: React.FC = () => {
   const router = useRouter();
@@ -13,12 +14,19 @@ export const PersonalProfile: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [profileOptions, setProfileOptions] = useState<ProfileOptions | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOptions = async () => {
-      const options = await generateProfileOptions();
-      setProfileOptions(options);
-      setLoading(false);
+      try {
+        const options = await generateProfileOptions();
+        setProfileOptions(options);
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed to load profile options:', err);
+        setError('Failed to load profile questions. Please refresh the page to try again.');
+        setLoading(false);
+      }
     };
     fetchOptions();
   }, []);
@@ -69,8 +77,40 @@ export const PersonalProfile: React.FC = () => {
   };
 
   const renderStep = () => {
-    if (loading || !profileOptions) {
-      return <div>Loading...</div>;
+    if (loading) {
+      return <PersonalProfileLoadingScreen />;
+    }
+
+    if (error) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
+          <div className="text-center p-8">
+            <div className="bg-red-100 text-red-800 px-4 py-2 rounded-full mb-4 inline-block">
+              Error
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h1>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <div className="space-x-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => router.push('/skill-results')}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (!profileOptions) {
+      return <PersonalProfileLoadingScreen />;
     }
 
     switch (currentStep) {

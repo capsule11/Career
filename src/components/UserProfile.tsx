@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Award, TrendingUp, Target } from 'lucide-react';
-import { SkillResult, PersonalProfile } from '@/types';
+import React, { useState, useEffect } from 'react';
+import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Award, TrendingUp, Target, Clock, CheckCircle, History, BookOpen, Briefcase } from 'lucide-react';
+import { SkillResult } from '@/types';
 
 interface UserProfileProps {
   userProfile: {
@@ -14,21 +14,31 @@ interface UserProfileProps {
     avatar?: string;
   };
   skillResults?: SkillResult[];
-  personalProfile?: PersonalProfile;
+  recommendations?: any[];
+  assessmentHistory?: {
+    sessionId: string;
+    completedAt: Date;
+    skillResults: SkillResult[];
+    recommendations?: any[];
+  }[];
   onBack: () => void;
   onUpdateProfile: (profile: any) => void;
+  onRetakeAssessment?: () => void;
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
   userProfile,
   skillResults,
-  personalProfile,
+  recommendations = [],
+  assessmentHistory = [],
   onBack,
-  onUpdateProfile
+  onUpdateProfile,
+  onRetakeAssessment
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState(userProfile);
-
+  const [activeTab, setActiveTab] = useState<'overview' | 'assessment' | 'history' | 'recommendations'>('overview');
+  
   const handleSave = () => {
     onUpdateProfile(editedProfile);
     setIsEditing(false);
@@ -154,6 +164,94 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           </div>
         </div>
 
+        {/* Tab Navigation */}
+        <div className="bg-white rounded-xl shadow-lg mb-8">
+          <div className="flex border-b border-gray-200">
+            {[
+              { key: 'overview', label: 'Overview', icon: User },
+              { key: 'assessment', label: 'Assessment', icon: Award },
+              { key: 'history', label: 'History', icon: History },
+              { key: 'recommendations', label: 'Recommendations', icon: Briefcase }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
+                    activeTab === tab.key
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-blue-600'
+                  }`}
+                >
+                  <Icon size={20} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <div>
+            {/* Progress Overview */}
+            <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Progress</h2>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className={`p-6 rounded-lg text-center bg-green-100'
+                }`}>
+                  <CheckCircle className={`mx-auto mb-2 text-green-600'
+                  }`} size={32} />
+                  <h3 className="font-semibold">Skills Assessment</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Completed
+                  </p>
+                </div>
+                <div className={`p-6 rounded-lg text-center bg-green-100'
+                }`}>
+                  <CheckCircle className={`mx-auto mb-2 text-green-600'
+                  }`} size={32} />
+                  <h3 className="font-semibold">Personal Profile</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Completed
+                  </p>
+                </div>
+                <div className={`p-6 rounded-lg text-center bg-green-100'
+                }`}>
+                  <CheckCircle className={`mx-auto mb-2 text-green-600'
+                  }`} size={32} />
+                  <h3 className="font-semibold">Career Recommendations</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Generated
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'assessment' && (
+          <div>
+            {/* Assessment Actions */}
+            <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Assessment Management</h2>
+                {onRetakeAssessment && (
+                  <button
+                    onClick={onRetakeAssessment}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Retake Assessment
+                  </button>
+                )}
+              </div>
+              
+              <div className="bg-green-50 p-4 rounded-lg">
+                <p className="text-green-800">✓ You have completed your skills assessment. Your results are available below.</p>
+              </div>
+            </div>
+
         {/* Assessment Results */}
         {skillResults && skillResults.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
@@ -199,66 +297,83 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             </div>
           </div>
         )}
+          </div>
+        )}
 
-        {/* Personal Profile */}
-        {personalProfile && (
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Personal Profile</h2>
-
-            <div className="grid md:grid-cols-2 gap-8">
+        {activeTab === 'history' && (
+          <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Assessment History</h2>
+            {assessmentHistory.length > 0 ? (
               <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Interests</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {personalProfile.interests.map((interest, index) => (
-                      <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                        {interest}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Personality Traits</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {personalProfile.personalityTraits.map((trait, index) => (
-                      <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                        {trait}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                {assessmentHistory.map((record, index) => {
+                  const averageScore = record.skillResults.reduce((sum, result) => sum + result.percentage, 0) / record.skillResults.length;
+                  return (
+                    <div key={record.sessionId} className="border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="font-semibold text-lg text-gray-900">
+                            Assessment #{assessmentHistory.length - index}
+                          </h3>
+                          <p className="text-sm text-gray-600 flex items-center gap-2">
+                            <Clock size={16} />
+                            Completed on {new Date(record.completedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-blue-600">{Math.round(averageScore)}%</p>
+                          <p className="text-sm text-gray-600">Overall Score</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {record.skillResults.map((result, skillIndex) => (
+                          <div key={skillIndex} className="bg-gray-50 rounded-lg p-4">
+                            <h4 className="font-medium text-gray-900 text-sm">{result.area}</h4>
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-lg font-bold text-blue-600">{Math.round(result.percentage)}%</span>
+                              <span className="text-xs text-gray-600">{result.level}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+            ) : (
+              <div className="text-center py-12">
+                <History className="mx-auto text-gray-400 mb-4" size={48} />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Assessment History</h3>
+                <p className="text-gray-600">Complete your first assessment to see your history here.</p>
+              </div>
+            )}
+          </div>
+        )}
 
+        {activeTab === 'recommendations' && (
+          <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Career Recommendations</h2>
+            {recommendations && recommendations.length > 0 ? (
               <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Work Environment</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {personalProfile.workEnvironment.map((env, index) => (
-                      <span key={index} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                        {env}
-                      </span>
-                    ))}
+                {recommendations.map((rec: any, index: number) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-6">
+                    <h3 className="font-semibold text-lg text-gray-900">{rec.title}</h3>
+                    <p className="text-sm text-gray-600 mb-4">{rec.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {rec.skills.map((skill: string, i: number) => (
+                        <span key={i} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Values</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {personalProfile.values.map((value, index) => (
-                      <span key={index} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
-                        {value}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
-            </div>
-
-            {personalProfile.careerGoals && (
-              <div className="mt-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Career Goals</h3>
-                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{personalProfile.careerGoals}</p>
+            ) : (
+              <div className="text-center py-12">
+                <Briefcase className="mx-auto text-gray-400 mb-4" size={48} />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Recommendations Yet</h3>
+                <p className="text-gray-600">Complete your skills assessment to receive personalized career recommendations.</p>
               </div>
             )}
           </div>

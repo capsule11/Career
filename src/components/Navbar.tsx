@@ -3,26 +3,12 @@
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { User, Menu, X, Home, Brain, Compass, LogIn, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { AuthModal } from './AuthModal';
 
-interface NavbarProps {
-  isLoggedIn: boolean;
-  userProfile?: {
-    name: string;
-    email: string;
-    avatar?: string;
-  };
-  onLogin: () => void;
-  onLogout: () => void;
-  onProfileClick: () => void;
-}
-
-export const Navbar: React.FC<NavbarProps> = ({
-  isLoggedIn,
-  userProfile,
-  onLogin,
-  onLogout,
-  onProfileClick
-}) => {
+export const Navbar: React.FC = () => {
+  const { user, logout } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -30,7 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navItems = [
     { id: 'welcome', label: 'Home', icon: Home, path: '/' },
     { id: 'skills-test', label: 'Assessment', icon: Brain, path: '/skills-test' },
-    { id: 'guidance', label: 'Guidance', icon: Compass, path: '/guidance' },
+    { id: 'guidance', label: 'Guidance', icon: Compass, path: '/guidance-section' },
   ];
 
   return (
@@ -57,7 +43,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               return (
                 <button
                   key={item.id}
-                  onClick={() => router.push(item.path)}
+                  onClick={() => {
+                    // Check if user needs to be authenticated for this route
+                    if ((item.id === 'skills-test' || item.id === 'guidance') && !user) {
+                      setShowAuthModal(true);
+                      return;
+                    }
+                    router.push(item.path);
+                  }}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
                     isActive
                       ? 'bg-blue-100 text-blue-700 font-medium'
@@ -73,27 +66,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* User Profile / Login */}
           <div className="hidden md:flex items-center gap-4">
-            {isLoggedIn && userProfile ? (
+            {user ? (
               <div className="flex items-center gap-3">
+                
                 <button
-                  onClick={onProfileClick}
+                  onClick={() => router.push('/user-profile')}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-all"
                 >
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    {userProfile.avatar ? (
+                    {user.image ? (
                       <img 
-                        src={userProfile.avatar} 
-                        alt={userProfile.name}
+                        src={user.image} 
+                        alt={user.name}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
                       <User className="text-white" size={16} />
                     )}
                   </div>
-                  <span className="text-gray-700 font-medium">{userProfile.name}</span>
+                  <span className="text-gray-700 font-medium">{user.name}</span>
                 </button>
                 <button
-                  onClick={onLogout}
+                  onClick={logout}
                   className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
                 >
                   <LogOut size={16} />
@@ -102,7 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             ) : (
               <button
-                onClick={onLogin}
+                onClick={() => setShowAuthModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
               >
                 <LogIn size={16} />
@@ -132,6 +126,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     key={item.id}
                     onClick={() => {
+                      // Check if user needs to be authenticated for this route
+                      if ((item.id === 'skills-test' || item.id === 'guidance') && !user) {
+                        setShowAuthModal(true);
+                        setIsMobileMenuOpen(false);
+                        return;
+                      }
                       router.push(item.path);
                       setIsMobileMenuOpen(false);
                     }}
@@ -148,11 +148,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               })}
               
               <div className="border-t border-gray-200 pt-4 mt-4">
-                {isLoggedIn && userProfile ? (
+                {user ? (
                   <div className="space-y-2">
                     <button
                       onClick={() => {
-                        onProfileClick();
+                        router.push('/user-profile');
                         setIsMobileMenuOpen(false);
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-all"
@@ -162,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                     <button
                       onClick={() => {
-                        onLogout();
+                        logout();
                         setIsMobileMenuOpen(false);
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-all"
@@ -174,7 +174,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ) : (
                   <button
                     onClick={() => {
-                      onLogin();
+                      setShowAuthModal(true);
                       setIsMobileMenuOpen(false);
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg"
@@ -188,6 +188,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
       </div>
+      
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </nav>
   );
 };

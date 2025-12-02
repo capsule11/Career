@@ -43,7 +43,7 @@ export const SkillResults: React.FC = () => {
           Skills Assessment Complete
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Skills Profile</h1>
-        <p className="text-gray-600 text-lg">Here's how you performed across different skill areas</p>
+        <p className="text-gray-600 text-lg">Here&apos;s how you performed across different skill areas</p>
       </div>
 
       {/* Overall Summary */}

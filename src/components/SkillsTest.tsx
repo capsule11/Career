@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronLeft, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { SkillArea, Question, SkillResult } from '@/types';
 import { useTestResultStore } from '@/store/test-result';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SkillsTestProps {
   skillAreas: SkillArea[];
@@ -13,13 +14,17 @@ interface SkillsTestProps {
 export const SkillsTest: React.FC<SkillsTestProps> = ({ skillAreas }) => {
   const router = useRouter();
   const setSkillResults = useTestResultStore((state) => state.setSkillResults);
+  const { saveAssessmentResults, user, updateUser } = useAuth();
   const [currentAreaIndex, setCurrentAreaIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [answersWithDetails, setAnswersWithDetails] = useState<any[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(30);
   const [timerActive, setTimerActive] = useState(true);
+  const [startTime] = useState(Date.now());
+  const [saving, setSaving] = useState(false);
 
   const currentArea = skillAreas[currentAreaIndex];
   const currentQuestion = currentArea.questions[currentQuestionIndex];
@@ -44,13 +49,26 @@ export const SkillsTest: React.FC<SkillsTestProps> = ({ skillAreas }) => {
   const handleAnswerSubmit = () => {
     if (selectedAnswer !== null || timeLeft === 0) {
       const finalAnswer = selectedAnswer !== null ? selectedAnswer : -1;
+      const timeSpent = 30 - timeLeft;
+
       setAnswers(prev => ({ ...prev, [currentQuestion.id]: finalAnswer }));
+
+      // Track detailed answer for database storage
+      const answerDetail = {
+        questionId: currentQuestion.id,
+        selectedAnswer: finalAnswer,
+        isCorrect: finalAnswer === currentQuestion.correctAnswer,
+        timeSpent: timeSpent,
+        skillArea: currentArea.name
+      };
+
+      setAnswersWithDetails(prev => [...prev, answerDetail]);
       setShowExplanation(true);
       setTimerActive(false);
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentQuestionIndex < currentArea.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else if (currentAreaIndex < skillAreas.length - 1) {
@@ -60,6 +78,25 @@ export const SkillsTest: React.FC<SkillsTestProps> = ({ skillAreas }) => {
       // Test complete
       const results = calculateResults();
       setSkillResults(results);
+
+      // Save assessment results to database
+      if (user) {
+        setSaving(true);
+        try {
+          const sessionId = `session_${Date.now()}_${user.id}`;
+          const result = await saveAssessmentResults(results, answersWithDetails, sessionId);
+          if (result.success) {
+            console.log('Assessment results saved successfully');
+          } else {
+            console.error('Failed to save assessment results:', result);
+          }
+        } catch (error) {
+          console.error('Error saving assessment results:', error);
+        } finally {
+          setSaving(false);
+        }
+      }
+
       router.push('/skill-results');
       return;
     }
@@ -227,13 +264,23 @@ export const SkillsTest: React.FC<SkillsTestProps> = ({ skillAreas }) => {
           ) : (
             <button
               onClick={handleNext}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+              disabled={saving}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {currentAreaIndex === skillAreas.length - 1 && currentQuestionIndex === currentArea.questions.length - 1
-                ? 'Complete Test'
-                : 'Next Question'
-              }
-              <ChevronRight size={20} />
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  {currentAreaIndex === skillAreas.length - 1 && currentQuestionIndex === currentArea.questions.length - 1
+                    ? 'Complete Test'
+                    : 'Next Question'
+                  }
+                  <ChevronRight size={20} />
+                </>
+              )}
             </button>
           )}
         </div>
